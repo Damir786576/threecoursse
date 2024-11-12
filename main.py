@@ -1,56 +1,63 @@
-import logging
-from database import save_data
-from db_manager import DBManager  # Импортируем ваш класс DBManager
-
-# Настройка логирования (можно оставить, если нужно для отладки)
-logging.basicConfig(level=logging.INFO)
+from api import get_vacancies, get_employer
+from database import create_database, create_tables, save_data
+from db_manager import DBManager
+import psycopg2
 
 
 def main():
-    # Параметры подключения к базе данных
-    dbname = 'postgres'
+    # Database connection parameters
+    dbname = 'hh_vacancies'
     user = 'postgres'
     password = 'damir_999'
     host = 'localhost'
 
-    # Создание экземпляра DBManager
+    # Create database and tables
+    create_database(dbname, user, password, host)
+    conn = psycopg2.connect(dbname=dbname, user=user, password=password, host=host)
+    create_tables(conn)
+
+    # List of company IDs (replace with actual company IDs)
+    company_ids = ['1740', '2180', '3529', '15478', '78638', '87021', '740', '2748', '3776', '3127']
+
+    # Fetch data from API
+    employers_data = {}
+    for company_id in company_ids:
+        employer_info = get_employer(company_id)
+        if employer_info:
+            employers_data[company_id] = employer_info
+
+    vacancies_data = get_vacancies(company_ids)
+
+    # Save data to database
+    save_data(conn, employers_data, vacancies_data)
+
+    # Create DBManager instance
     db_manager = DBManager(dbname, user, password, host)
 
-    try:
-        # Получение количества вакансий по компаниям
-        print("Получение количества вакансий по компаниям...")
-        companies_and_counts = db_manager.get_companies_and_vacancies_count()
-        for company, count in companies_and_counts:
-            print(f"Компания: {company}, Количество вакансий: {count}")
+    # Use DBManager methods to interact with the data
+    print("Companies and vacancy counts:")
+    for company, count in db_manager.get_companies_and_vacancies_count():
+        print(f"{company}: {count} vacancies")
 
-        # Получение всех вакансий
-        print("\nПолучение всех вакансий...")
-        all_vacancies = db_manager.get_all_vacancies()
-        for employer_name, vacancy_name, salary, url in all_vacancies:
-            print(f"Работодатель: {employer_name}, Вакансия: {vacancy_name}, Зарплата: {salary}, URL: {url}")
+    print("\nAll vacancies:")
+    for vacancy in db_manager.get_all_vacancies():
+        print(vacancy)
 
-        # Получение средней зарплаты
-        print("\nПолучение средней зарплаты...")
-        avg_salary = db_manager.get_avg_salary()
-        print(f"Средняя зарплата: {avg_salary}")
+    avg_salary = db_manager.get_avg_salary()
+    print(f"\nAverage salary: {avg_salary:.2f}")
 
-        # Получение вакансий с зарплатой выше средней
-        print("\nПолучение вакансий с зарплатой выше средней...")
-        higher_salary_vacancies = db_manager.get_vacancies_with_higher_salary()
-        for employer_name, vacancy_name, salary, url in higher_salary_vacancies:
-            print(f"Работодатель: {employer_name}, Вакансия: {vacancy_name}, Зарплата: {salary}, URL: {url}")
+    print("\nVacancies with higher than average salary:")
+    for vacancy in db_manager.get_vacancies_with_higher_salary():
+        print(vacancy)
 
-        # Поиск вакансий по ключевому слову
-        keyword = input("\nВведите ключевое слово для поиска вакансий: ")
-        print(f"\nПоиск вакансий с ключевым словом '{keyword}'...")
-        keyword_vacancies = db_manager.get_vacancies_with_keyword(keyword)
-        for employer_name, vacancy_name, salary, url in keyword_vacancies:
-            print(f"Работодатель: {employer_name}, Вакансия: {vacancy_name}, Зарплата: {salary}, URL: {url}")
+    keyword = input("\nEnter a keyword to search for vacancies: ")
+    print(f"\nVacancies with keyword '{keyword}':")
+    for vacancy in db_manager.get_vacancies_with_keyword(keyword):
+        print(vacancy)
 
-    except Exception as e:
-        print(f"Произошла ошибка: {e}")
-    finally:
-        db_manager.close()  # Закрываем соединение с базой данных
+    # Close connections
+    db_manager.close()
+    conn.close()
 
 
 if __name__ == '__main__':
