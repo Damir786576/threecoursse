@@ -1,10 +1,13 @@
 import psycopg2
 
+
 class DBManager:
+    # Initialize database connection
     def __init__(self, dbname, user, password, host):
         self.conn = psycopg2.connect(dbname=dbname, user=user, password=password, host=host)
         self.conn.autocommit = True
 
+    # Get the count of vacancies for each company
     def get_companies_and_vacancies_count(self):
         with self.conn.cursor() as cur:
             cur.execute("""
@@ -15,6 +18,7 @@ class DBManager:
             """)
             return cur.fetchall()
 
+    # Get all vacancies with company name, salary, and URL
     def get_all_vacancies(self):
         with self.conn.cursor() as cur:
             cur.execute("""
@@ -24,6 +28,7 @@ class DBManager:
             """)
             return cur.fetchall()
 
+    # Calculate the average salary of all vacancies
     def get_avg_salary(self):
         with self.conn.cursor() as cur:
             cur.execute("""
@@ -33,6 +38,7 @@ class DBManager:
             """)
             return cur.fetchone()[0]
 
+    # Get vacancies with salary higher than average
     def get_vacancies_with_higher_salary(self):
         avg_salary = self.get_avg_salary()
         with self.conn.cursor() as cur:
@@ -44,6 +50,7 @@ class DBManager:
             """, (avg_salary,))
             return cur.fetchall()
 
+    # Search for vacancies by keyword
     def get_vacancies_with_keyword(self, keyword):
         with self.conn.cursor() as cur:
             cur.execute("""

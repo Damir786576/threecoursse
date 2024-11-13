@@ -1,12 +1,12 @@
 import psycopg2
 
 
+# Create a new database
 def create_database(database_name, user, password, host):
     conn = psycopg2.connect(dbname="postgres", user=user, password=password, host=host)
     conn.autocommit = True
     cur = conn.cursor()
 
-    # Create database if it doesn't exist
     cur.execute(f"SELECT 1 FROM pg_catalog.pg_database WHERE datname = '{database_name}'")
     exists = cur.fetchone()
     if not exists:
@@ -16,6 +16,7 @@ def create_database(database_name, user, password, host):
     conn.close()
 
 
+# Create employers and vacancies tables
 def create_tables(conn):
     with conn.cursor() as cur:
         cur.execute("""
@@ -41,6 +42,7 @@ def create_tables(conn):
     conn.commit()
 
 
+# Update employer data
 def insert_employer(cur, employer):
     cur.execute("""
         INSERT INTO employers (hh_id, name, url) 
@@ -53,6 +55,7 @@ def insert_employer(cur, employer):
     return cur.fetchone()[0]
 
 
+# Update vacancy data
 def insert_vacancy(cur, vacancy, employer_id):
     salary_from = vacancy['salary']['from'] if vacancy['salary'] and vacancy['salary']['from'] else None
     salary_to = vacancy['salary']['to'] if vacancy['salary'] and vacancy['salary']['to'] else None
@@ -68,11 +71,11 @@ def insert_vacancy(cur, vacancy, employer_id):
     """, (vacancy['id'], vacancy['name'], employer_id, salary_from, salary_to, vacancy['alternate_url']))
 
 
+# Save both employer and vacancy data
 def save_data(conn, employers_data, vacancies_data):
     with conn.cursor() as cur:
         for employer_id, employer_info in employers_data.items():
             employer_db_id = insert_employer(cur, employer_info)
-
             if employer_id in vacancies_data:
                 for vacancy in vacancies_data[employer_id]['items']:
                     insert_vacancy(cur, vacancy, employer_db_id)

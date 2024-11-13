@@ -5,7 +5,7 @@ import psycopg2
 
 
 def main():
-    # Database connection parameters
+    # Database connection
     dbname = 'hh_vacancies'
     user = 'postgres'
     password = 'damir_999'
@@ -16,7 +16,7 @@ def main():
     conn = psycopg2.connect(dbname=dbname, user=user, password=password, host=host)
     create_tables(conn)
 
-    # List of company IDs (replace with actual company IDs)
+    # List of company
     company_ids = ['1740', '2180', '3529', '15478', '78638', '87021', '740', '2748', '3776', '3127']
 
     # Fetch data from API
@@ -35,23 +35,23 @@ def main():
     db_manager = DBManager(dbname, user, password, host)
 
     # Use DBManager methods to interact with the data
-    print("Companies and vacancy counts:")
+    print("Компании и количество вакансий:")
     for company, count in db_manager.get_companies_and_vacancies_count():
-        print(f"{company}: {count} vacancies")
+        print(f"{company}: {count} вакансий")
 
-    print("\nAll vacancies:")
+    print("\nВсе вакансии")
     for vacancy in db_manager.get_all_vacancies():
         print(vacancy)
 
     avg_salary = db_manager.get_avg_salary()
-    print(f"\nAverage salary: {avg_salary:.2f}")
+    print(f"\nСредняя зарплата {avg_salary:.2f}")
 
-    print("\nVacancies with higher than average salary:")
+    print("\nВакансии с зарплатой выше средней:")
     for vacancy in db_manager.get_vacancies_with_higher_salary():
         print(vacancy)
 
-    keyword = input("\nEnter a keyword to search for vacancies: ")
-    print(f"\nVacancies with keyword '{keyword}':")
+    keyword = input("\nВведите ключевое слово для поиска вакансий: ")
+    print(f"\nВакансии с ключевым словом '{keyword}':")
     for vacancy in db_manager.get_vacancies_with_keyword(keyword):
         print(vacancy)
 
