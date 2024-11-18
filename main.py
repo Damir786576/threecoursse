@@ -2,14 +2,18 @@ from api import get_vacancies, get_employer
 from database import create_database, create_tables, save_data
 from db_manager import DBManager
 import psycopg2
+import configparser
 
 
 def main():
     # Database connection
-    dbname = 'hh_vacancies'
-    user = 'postgres'
-    password = 'damir_999'
-    host = 'localhost'
+    config = configparser.ConfigParser()
+    config.read('Database.ini')
+
+    dbname = config['database']['dbname']
+    user = config['database']['user']
+    password = config['database']['password']
+    host = config['database']['host']
 
     # Create database and tables
     create_database(dbname, user, password, host)
